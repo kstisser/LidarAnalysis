@@ -1,0 +1,1 @@
+Expected: Circuit Playground Express with loaded uf2 file. This script was tested with version 5.3.1, and had the full library package loaded for this version as well. The code.py was loaded through Mu. Check Adafruit website for instructions on how to properly load and flash this board. 
