@@ -30,7 +30,9 @@ class SensorReadings:
         while True:
             temp = self.getTemperature()
             self.temperatures = np.append(self.temperatures, temp)
+            print("Temperature moving average: ")
             print(self.temperatures.mean())
             humid = self.getHumidity()
             self.humidities = np.append(self.humidities, humid)
+            print("Humidities moving average: ")
             print(self.humidities.mean())
