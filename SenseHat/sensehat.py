@@ -1,5 +1,6 @@
 from sense_hat import SenseHat
 from time import sleep
+import numpy as np
 
 #Purpose of this class is to read temperature and humidity readings from a 
 #raspberry pi sense hat
@@ -7,12 +8,16 @@ from time import sleep
 class SensorReadings:
     def __init__(self):
         self.sense = SenseHat()
+        self.temperatures = np.array([])
+        self.humidities = np.array([])
 
     def getTemperature(self):
-        return self.sense.get_temperature()
+        temp = self.sense.get_temperature()
+        return temp
 
     def getHumidity(self):
-        return self.sense.get_humidity()
+        humidity = self.sense.get_humidity()
+        return humidity
 
     def printTempHumidityReadings(self):
         while True:
@@ -20,3 +25,12 @@ class SensorReadings:
             print(self.getTemperature())
             print("Humidity" )
             print(self.getHumidity())
+
+    def getRunningAverage(self):
+        while True:
+            temp = self.getTemperature()
+            self.temperatures = np.append(self.temperatures, temp)
+            print(self.temperatures.mean())
+            humid = self.getHumidity()
+            self.humidities = np.append(self.humidities, humid)
+            print(self.humidities.mean())
