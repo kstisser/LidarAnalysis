@@ -2,11 +2,12 @@
 #Working with the adafruit circuit playground express using the raspberry pi
 import glob, serial, time, signal, sys
 import rospy
+from std_msgs.msg import Float32
 
 class CPExpressCommunicator:
-    def __init__(self, deviceName, serial):
-        self.device = glob.glob(deviceName, recursive=False)[0]
-        self.serUSB = serial.Serial(self.device, serial, timeout=1)
+    def __init__(self, deviceName, serialNum):
+        self.device = glob.glob(deviceName)[0]
+        self.serUSB = serial.Serial(self.device, serialNum, timeout=1)
 
     def sigint_handler(self, signum, frame):
         self.serUSB.close()
@@ -19,9 +20,9 @@ class CPExpressCommunicator:
         self.serUSB.open()
 
     def getLightReading(self):
-        print("Starting to get light readings")
+        #print("Starting to get light readings")
         while True:
-            usbdata = serUSB.read_until()
+            usbdata = self.serUSB.read_until()
             if len(usbdata) > 0:
                 lightRtn = usbdata.decode('UTF-8').rstrip()
                 print(lightRtn)
