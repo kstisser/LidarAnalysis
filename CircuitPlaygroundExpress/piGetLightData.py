@@ -1,7 +1,7 @@
 #reference for code at arcanesciencelab.wordpress.com
 #Working with the adafruit circuit playground express using the raspberry pi
 import glob, serial, time, signal, sys
-
+import rospy
 
 class CPExpressCommunicator:
     def __init__(self, deviceName, serial):
@@ -18,17 +18,27 @@ class CPExpressCommunicator:
         self.serUSB.close()
         self.serUSB.open()
 
-    def publishLight(self):
+    def getLightReading(self):
         print("Starting to get light readings")
         while True:
             usbdata = serUSB.read_until()
             if len(usbdata) > 0:
-                print(usbdata.decode('UTF-8').rstrip())
+                lightRtn = usbdata.decode('UTF-8').rstrip()
+                print(lightRtn)
+                return lightRtn
 
 if __name__ == '__main__':
     try:
         communicator = CPExpressCommunicator("/dev/ttyACM*", 115200)
         communicator.startConnection()
-        communicator.publishLight()
+
+        lightPub = rospy.Publisher('light', Float32, queue_size=10)
+        rospy.init_node('lightNode', anonymous=True)
+        rate = rospy.Rate(10) #10 Hz
+
+        while not rospy.is_shutdown():
+            light = communicator.getLightReading()
+            lightPub.publish(light)
+            rate.sleep()
     except rospy.ROSInterruptException:
         pass
