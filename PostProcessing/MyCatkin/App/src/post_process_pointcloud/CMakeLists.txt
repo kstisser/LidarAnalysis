@@ -15,6 +15,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  image_transport
+  cv_bridge
+  dynamic_reconfigure
 )
 
 ## System dependencies are found with CMake's conventions
@@ -34,7 +37,7 @@ find_package(OpenCV ${OCV_VERSION} COMPONENTS core highgui imgproc REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES post_process_pointcloud
-  CATKIN_DEPENDS roscpp rospy std_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs cv_bridge dynamic_reconfigure image_transport message_runtime
 #  DEPENDS system_lib
 )
 
