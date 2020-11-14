@@ -18,12 +18,25 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   cv_bridge
   dynamic_reconfigure
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(PCL REQUIRED)
 find_package(OpenCV ${OCV_VERSION} COMPONENTS core highgui imgproc REQUIRED)
+
+## Generate messages in the 'msg' folder
+add_message_files(
+   FILES
+   PointCountAndColor.msg
+)
+
+## Generate added messages and services with any dependencies listed here
+generate_messages(
+   DEPENDENCIES
+   std_msgs
+)
 
 ###################################
 ## catkin specific configuration ##
