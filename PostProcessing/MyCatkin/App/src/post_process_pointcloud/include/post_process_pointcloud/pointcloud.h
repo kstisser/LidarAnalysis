@@ -28,13 +28,14 @@
 #include <pcl/sample_consensus/method_types.h>
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
+#include <image_transport/image_transport.h>
 
 namespace PC
 {
    class PostProcessPointcloud
    {
       public:
-         PostProcessPointcloud( ros::NodeHandle *handle );
+         PostProcessPointcloud( ros::NodeHandle *handle, Scenarios::Scenario scenario );
          ~PostProcessPointcloud() = default;
 
          void callback( const sensor_msgs::ImageConstPtr &cameraImage,
@@ -44,10 +45,17 @@ namespace PC
       private:
          ros::NodeHandle *_mHandle;
          ros::Publisher _mPointNumColor_pub;
+         image_transport::ImageTransport _mImHandle;
+         image_transport::Publisher _mLaplacianPub;
+         image_transport::Publisher _mLapFilterResultPub;
 
          std::string _mCameraTopic;
          std::string _mIRimageTopic;
          std::string _mPointCloudTopic;
+
+         const float BUFFERREGION_m = 0.04;
+
+         Scenarios::Scenario _mScenario;
 
          //void convertImgToPointCloud(pcl::PointCloud<pcl::PointXYZRGB> &cloud, sensor_msgs::ImageConstPtr depth);
 

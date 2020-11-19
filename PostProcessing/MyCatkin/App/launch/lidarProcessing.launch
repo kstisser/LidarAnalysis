@@ -1,0 +1,13 @@
+<launch>
+
+<node pkg="post_process_pointcloud" 
+      type="post_process_pointcloud_node" 
+      name="post_process_pointcloud_node" 
+      output="log">
+<param name="size" type="int" value="1"/>
+<param name="objectTemperature" type="int" value="1"/>
+<param name="objectColor" type="int" value="1"/>
+<param name="distance" type="int" value="1"/>
+</node>
+
+</launch>

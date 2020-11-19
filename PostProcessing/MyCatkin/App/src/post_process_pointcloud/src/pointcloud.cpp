@@ -11,10 +11,17 @@ namespace PC
     * 
     * @param handle This is a ROS node handle which allows message communication
     */
-   PostProcessPointcloud::PostProcessPointcloud( ros::NodeHandle *handle ):
-      _mHandle( handle )
+   PostProcessPointcloud::PostProcessPointcloud( ros::NodeHandle *handle, Scenarios::Scenario scenario ):
+      _mHandle( handle ),
+      _mImHandle( *handle )
    {
+      this->_mScenario = scenario;
+
       this->_mPointNumColor_pub = handle->advertise<post_process_pointcloud::PointCountAndColor>(Topics::NumPointsAndColor, 1);
+
+      //initialize all output image publishers
+      this->_mLaplacianPub = _mImHandle.advertise("/Laplacian", 1);
+      this->_mLapFilterResultPub = _mImHandle.advertise("/LapFilterResult", 1);
    }
 
    /**
@@ -38,8 +45,25 @@ namespace PC
       cv::Mat IRimage_cv = ( cv_bridge::toCvCopy( IRimage, IRimage->encoding ) )->image;
       cv::Mat pointCloud_cv = ( cv_bridge::toCvCopy( pointCloud, pointCloud->encoding ) )->image;
 
-      //segment
+      float distanceAway_m = float(pointCloud_cv.at<uchar>(cv::Point(327,269)))/10.0;
+      ROS_INFO_STREAM("Point cloud:");
+      ROS_INFO_STREAM(std::to_string(distanceAway_m));
+      ROS_INFO_STREAM("IR image:");
+      ROS_INFO_STREAM(std::to_string(IRimage_cv.at<uchar>(cv::Point(327,269))));
+      ROS_INFO_STREAM("Camera:");
+      //ROS_INFO_STREAM(std::to_string(cameraImage_cv.at<Vec3b>(cv::Point(666,454))));
 
+      //segment
+      Supportive::ObjectExpectations expectations = Supportive::getSizeExpectation(this->_mScenario, SensorSpecs::getIntelLidar());
+
+      //publish images for debugging visualization
+      /*sensor_msgs::ImagePtr lapMsg = cv_bridge::CvImage( std_msgs::Header(), pointCloud->encoding, bw ).toImageMsg();
+      lapMsg->header.stamp = ros::Time::now(); 
+      this->_mLaplacianPub.publish(lapMsg); 
+
+      sensor_msgs::ImagePtr lapFilterMsg = cv_bridge::CvImage( std_msgs::Header(), pointCloud->encoding, imgResult ).toImageMsg();
+      lapFilterMsg->header.stamp = ros::Time::now(); 
+      this->_mLapFilterResultPub.publish(lapFilterMsg);*/
 
       //find which segmentation aligns with the expected distance
 
@@ -92,7 +116,19 @@ int main( int argc, char * *argv )
    ROS_INFO( "Initializing post processing pointcloud" );
    ros::init( argc, argv, "PostProcessingPointcloud", ros::init_options::NoRosout );
    ros::NodeHandle handle;
-   PC::PostProcessPointcloud pppNode(&handle);
+   
+   Scenarios::Scenario scenario;
+   int temp;
+   handle.getParam("size", temp);
+   scenario.size = Scenarios::Size(temp);
+   handle.getParam("objectTemperature", temp);
+   scenario.temperature = Scenarios::ObjectTemperature(temp);
+   handle.getParam("objectColor", temp);
+   scenario.color = Scenarios::ObjectColor(temp);
+   handle.getParam("distance", temp);
+   scenario.distance = Scenarios::Distance(temp);
+
+   PC::PostProcessPointcloud pppNode(&handle, scenario);
 
    message_filters::Subscriber<sensor_msgs::Image> cameraImage_sub( handle, Topics::CameraImageTopic, 10 );
    message_filters::Subscriber<sensor_msgs::Image> IRimage_sub( handle, Topics::IRimageTopic, 10 );
