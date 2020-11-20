@@ -29,41 +29,60 @@ namespace PC
     * 
     * @param cameraImage- Image from the Intel lidar camera
     * @param IRimage- Image from the IR part of the Intel lidar camera
-    * @param pointCloud- Point Cloud from the Intel lidar
+    * @param depthImage- Point Cloud from the Intel lidar
     */
    void PostProcessPointcloud::callback( const sensor_msgs::ImageConstPtr &cameraImage, 
                                          const sensor_msgs::ImageConstPtr &IRimage,
-                                         const sensor_msgs::ImageConstPtr &pointCloud )
+                                         const sensor_msgs::ImageConstPtr &depthImage )
    {
+      ROS_INFO("Entering callback");
       post_process_pointcloud::PointCountAndColor pCountColorMsg;
-      pCountColorMsg.header = pointCloud->header;
+      pCountColorMsg.header = depthImage->header;
 
-      pcl::PointCloud<pcl::PointXYZRGB> cloud;
+      ROS_INFO("Converting to opencv images");
 
       //convert to opencv image
       cv::Mat cameraImage_cv = ( cv_bridge::toCvCopy( cameraImage, cameraImage->encoding ) )->image;
       cv::Mat IRimage_cv = ( cv_bridge::toCvCopy( IRimage, IRimage->encoding ) )->image;
-      cv::Mat pointCloud_cv = ( cv_bridge::toCvCopy( pointCloud, pointCloud->encoding ) )->image;
+      cv::Mat depthImage_cv = ( cv_bridge::toCvCopy( depthImage, depthImage->encoding ) )->image;
 
-      float distanceAway_m = float(pointCloud_cv.at<uchar>(cv::Point(327,269)))/10.0;
-      ROS_INFO_STREAM("Point cloud:");
-      ROS_INFO_STREAM(std::to_string(distanceAway_m));
-      ROS_INFO_STREAM("IR image:");
-      ROS_INFO_STREAM(std::to_string(IRimage_cv.at<uchar>(cv::Point(327,269))));
-      ROS_INFO_STREAM("Camera:");
-      //ROS_INFO_STREAM(std::to_string(cameraImage_cv.at<Vec3b>(cv::Point(666,454))));
+      // float distanceAway_m = float(depthImage_cv.at<uchar>(cv::Point(327,269)))/10.0;
+      // ROS_INFO_STREAM("Point cloud:");
+      // ROS_INFO_STREAM(std::to_string(distanceAway_m));
+      // ROS_INFO_STREAM("IR image:");
+      // ROS_INFO_STREAM(std::to_string(IRimage_cv.at<uchar>(cv::Point(327,269))));
+      // ROS_INFO_STREAM("Camera:");
+      // //ROS_INFO_STREAM(std::to_string(cameraImage_cv.at<Vec3b>(cv::Point(666,454))));
 
       //segment
       Supportive::ObjectExpectations expectations = Supportive::getSizeExpectation(this->_mScenario, SensorSpecs::getIntelLidar());
+      //convolve each image to find where the expected object is
+      ROS_INFO("Getting convolved depth image");
+      //ROS_INFO_STREAM(expectations.convolutionKernel_depth);
+      cv::Mat depthConvolvedImage;
+      cv::filter2D(depthImage_cv, depthConvolvedImage, -1, expectations.convolutionKernel_depth, cv::Point(-1,-1), 0, cv::BORDER_REPLICATE);
+      double minValue_depth, maxValue_depth;
+      cv::Point minLocation_depth, maxLocation_depth;
+      cv::minMaxLoc(depthConvolvedImage, &minValue_depth, &maxValue_depth, &minLocation_depth, &maxLocation_depth);
+      ROS_INFO_STREAM("Max convolved depth: " << maxValue_depth);
+
+      /*ROS_INFO("Getting convolved camera image");
+      //ROS_INFO_STREAM(expectations.convolutionKernel_camera);
+      cv::Mat cameraConvolvedImage;
+      cv::filter2D(cameraImage_cv, cameraConvolvedImage, -1, expectations.convolutionKernel_camera, cv::Point(-1,-1), 0, cv::BORDER_REPLICATE);
+      double minValue_camera, maxValue_camera;
+      cv::Point minLocation_camera, maxLocation_camera;
+      cv::minMaxLoc(cameraConvolvedImage, &minValue_camera, &maxValue_camera, &minLocation_camera, &maxLocation_camera);
+      ROS_INFO_STREAM("Max convolved camera: " << maxValue_camera);*/
 
       //publish images for debugging visualization
-      /*sensor_msgs::ImagePtr lapMsg = cv_bridge::CvImage( std_msgs::Header(), pointCloud->encoding, bw ).toImageMsg();
-      lapMsg->header.stamp = ros::Time::now(); 
-      this->_mLaplacianPub.publish(lapMsg); 
+      sensor_msgs::ImagePtr depthMsg = cv_bridge::CvImage( std_msgs::Header(), depthImage->encoding, depthConvolvedImage ).toImageMsg();
+      depthMsg->header.stamp = ros::Time::now(); 
+      this->_mLaplacianPub.publish(depthMsg); 
 
-      sensor_msgs::ImagePtr lapFilterMsg = cv_bridge::CvImage( std_msgs::Header(), pointCloud->encoding, imgResult ).toImageMsg();
-      lapFilterMsg->header.stamp = ros::Time::now(); 
-      this->_mLapFilterResultPub.publish(lapFilterMsg);*/
+      /*sensor_msgs::ImagePtr cameraMsg = cv_bridge::CvImage( std_msgs::Header(), depthImage->encoding, cameraConvolvedImage ).toImageMsg();
+      cameraMsg->header.stamp = ros::Time::now(); 
+      this->_mLapFilterResultPub.publish(cameraMsg);*/
 
       //find which segmentation aligns with the expected distance
 
@@ -76,38 +95,6 @@ namespace PC
       //publish number of points and average pixel color
       this->_mPointNumColor_pub.publish(pCountColorMsg);
    }
-
-/*
-   //You can get your disparity map using StereoSGBM, then your depth map using reprojectImageTo3D. Once you have your depth map, you can reconstruct your 3D scene using something like this
-   //ref: https://answers.ros.org/question/237565/how-to-convert-sensor_msgsimage-to-pointcloudpclrgb/
-   void PostProcessPointcloud::convertImgToPointCloud(pcl::PointCloud<pcl::PointXYZRGB> &cloud, sensor_msgs::ImageConstPtr depth)
-   {
-      //Reconstruct PointCloud with the depthmap points
-      for (int i = 0; i < depth->rows; ++i)
-      {
-         for (int j = 0; j < depth->cols; ++j)
-         {
-            pcl::PointXYZRGB p;
-
-            //The coordinate of the point is taken from the depth map
-            //Y and Z  taken negative to immediately visualize the cloud in the right way
-            p.x = depth->at<Vec3f>(i,j)[0];
-            p.y = -(depth->at<Vec3f>(i,j)[1]);
-            p.z = -(depth->at<Vec3f>(i,j)[2]);
-
-            //Coloring the point with the corrispondent point in the rectified image
-            p.r = static_cast<uint8_t>(color.at<Vec3b>(i,j)[2]);
-            p.g = static_cast<uint8_t>(color.at<Vec3b>(i,j)[1]);
-            p.b = static_cast<uint8_t>(color.at<Vec3b>(i,j)[0]);
-
-            //Insert point in the cloud, cutting the points that are too distant
-            if(( abs( p.x ) < 500 )&&( abs( p.y ) < 200 )&&( abs( p.z ) < 500 ))
-               cloud.points.push_back(p);
-         }
-      }
-      cloud.width = (int) cloud->points.size();
-      cloud.height = 1;
-   }*/
 }
 
 
@@ -118,15 +105,30 @@ int main( int argc, char * *argv )
    ros::NodeHandle handle;
    
    Scenarios::Scenario scenario;
-   int temp;
+   scenario.size = Scenarios::Size::MM80;
+   scenario.temperature = Scenarios::ObjectTemperature::Ambient;
+   scenario.color = Scenarios::ObjectColor::White;
+   scenario.distance = Scenarios::Distance::FT4;
+   /*std::string temp;
+   int tempInt;
    handle.getParam("size", temp);
-   scenario.size = Scenarios::Size(temp);
+   ROS_INFO_STREAM("Got size: " << temp);
+   tempInt = stoi(temp);
+   scenario.size = static_cast<Scenarios::Size>(tempInt);
    handle.getParam("objectTemperature", temp);
-   scenario.temperature = Scenarios::ObjectTemperature(temp);
+   ROS_INFO_STREAM("Got object temperature: " << temp);
+   tempInt = stoi(temp);
+   scenario.temperature = static_cast<Scenarios::ObjectTemperature>(tempInt);
    handle.getParam("objectColor", temp);
-   scenario.color = Scenarios::ObjectColor(temp);
+   tempInt = stoi(temp);
+   scenario.color = static_cast<Scenarios::ObjectColor>(tempInt);
    handle.getParam("distance", temp);
-   scenario.distance = Scenarios::Distance(temp);
+   tempInt = stoi(temp);
+   scenario.distance = static_cast<Scenarios::Distance>(tempInt);*/
+   ROS_INFO_STREAM("Size: " << scenario.size);
+   ROS_INFO_STREAM("Temperature: " << scenario.temperature);
+   ROS_INFO_STREAM("Color: " << scenario.color);
+   ROS_INFO_STREAM("Distance input: " << scenario.distance);
 
    PC::PostProcessPointcloud pppNode(&handle, scenario);
 
