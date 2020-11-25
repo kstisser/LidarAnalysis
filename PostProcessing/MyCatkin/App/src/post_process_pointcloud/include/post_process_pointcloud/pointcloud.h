@@ -35,7 +35,7 @@ namespace PC
    class PostProcessPointcloud
    {
       public:
-         PostProcessPointcloud( ros::NodeHandle *handle, Scenarios::Scenario scenario );
+         PostProcessPointcloud( ros::NodeHandle *handle, std::string filename, Scenarios::Scenario scenario, Supportive::PixelPoints lidarPoints, Supportive::PixelPoints cameraPoints );
          ~PostProcessPointcloud() = default;
 
          void callback( const sensor_msgs::ImageConstPtr &cameraImage,
@@ -53,9 +53,11 @@ namespace PC
          std::string _mIRimageTopic;
          std::string _mPointCloudTopic;
 
-         const float BUFFERREGION_m = 0.04;
+         const float BUFFERREGION_m = 0.05;
 
          Scenarios::Scenario _mScenario;
+         Supportive::PixelPoints _mLidarPoints;
+         Supportive::PixelPoints _mCameraPoints;
 
          //void convertImgToPointCloud(pcl::PointCloud<pcl::PointXYZRGB> &cloud, sensor_msgs::ImageConstPtr depth);
 

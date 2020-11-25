@@ -92,6 +92,12 @@ namespace SensorSpecs
 
 namespace Supportive
 {
+   struct PixelPoints
+   {
+      cv::Point upperLeft;
+      cv::Point lowerRight;
+   };
+
    struct ObjectSize
    {
       float width;
@@ -107,12 +113,30 @@ namespace Supportive
    struct ObjectExpectations
    {
       ObjectSize size_m;
+      float distanceValue_m;
+      float minDistanceBuffer;
+      float maxDistanceBuffer;
+
       PixelCount pixelCount_depth;
       PixelCount pixelCount_camera;
-      float distanceValue_m;
+      
       cv::Mat convolutionKernel_depth;
       cv::Mat convolutionKernel_camera;
    };
+
+   cv::Mat computeHistogram(cv::Mat input_image) {
+      
+      cv::Mat histogram;
+      int channels[] = { 0 };
+      int histSize[] = { 56 };
+      float range[] = { 0, 256 };
+      const float* ranges[] = { range };
+      
+      calcHist(&input_image, 1, channels, cv::Mat(), histogram, 1, histSize, ranges, true, false);
+
+      return histogram;
+
+   }
 
    ObjectSize getSizeMeters(Scenarios::Size s)
    {
