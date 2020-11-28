@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+#Latex
+*.aux
+*.log
+*.synctex.gz
+
 #ROS and catkin specific
 *.built_by
 *.catkin
