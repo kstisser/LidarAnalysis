@@ -6,6 +6,7 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++17)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_BUILD_TYPE Debug)
 
 ## Find catkin macros and libraries
@@ -25,6 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(PCL REQUIRED)
 find_package(OpenCV ${OCV_VERSION} COMPONENTS core highgui imgproc REQUIRED)
+find_package(realsense2 REQUIRED)
 
 ## Generate messages in the 'msg' folder
 add_message_files(
@@ -48,7 +50,7 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS include lib/
   LIBRARIES post_process_pointcloud
   CATKIN_DEPENDS roscpp rospy std_msgs cv_bridge dynamic_reconfigure image_transport message_runtime
 #  DEPENDS system_lib
@@ -65,6 +67,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
+  ${realsense2_INCLUDE_DIRS}
 )
 
 include_directories( SYSTEM
@@ -82,5 +85,6 @@ target_link_libraries(${PROJECT_NAME}_node
   ${LINK_LIBRARIES}
   ${OpenCV_LIBRARIES}
   ${PCL_LIBRARIES}
+  ${realsense2_LIBRARY}
 )  
 

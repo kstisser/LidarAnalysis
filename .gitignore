@@ -19,6 +19,8 @@ PostProcessing/MyCatkin/App/.catkin_workspace
 PostProcessing/MyCatkin/App/build
 PostProcessing/MyCatkin/App/devel
 
+.vscode
+
 # Distribution / packaging
 .Python
 build/

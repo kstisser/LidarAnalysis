@@ -1,3 +1,3 @@
 Header header
 float32 numberOfPixels
-int32[3] averagePixelColor
+int32[3] averagePixelColor #RGB format

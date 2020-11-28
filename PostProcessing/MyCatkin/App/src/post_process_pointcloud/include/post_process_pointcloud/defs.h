@@ -24,7 +24,7 @@ namespace Scenarios
       MM40,
       MM80,
       MM160,
-      NAsize
+      HANDWARMER
    };
 
    enum ObjectTemperature
@@ -92,6 +92,12 @@ namespace SensorSpecs
 
 namespace Supportive
 {
+   struct PixelPoints
+   {
+      cv::Point upperLeft;
+      cv::Point lowerRight;
+   };
+
    struct ObjectSize
    {
       float width;
@@ -107,12 +113,51 @@ namespace Supportive
    struct ObjectExpectations
    {
       ObjectSize size_m;
+      float distanceValue_m;
+      float minDistanceBuffer;
+      float maxDistanceBuffer;
+
       PixelCount pixelCount_depth;
       PixelCount pixelCount_camera;
-      float distanceValue_m;
+      
       cv::Mat convolutionKernel_depth;
       cv::Mat convolutionKernel_camera;
    };
+
+   cv::Mat computeHistogram(cv::Mat input_image) {
+      
+      cv::Mat histogram;
+      int channels[] = { 0 };
+      int histSize[] = { 56 };
+      float range[] = { 0, 256 };
+      const float* ranges[] = { range };
+      
+      calcHist(&input_image, 1, channels, cv::Mat(), histogram, 1, histSize, ranges, true, false);
+
+      return histogram;
+
+   }
+
+   float getTemperatureCelcius(Scenarios::ObjectTemperature temp)
+   {
+      if(temp == Scenarios::C50) return 50;
+      else if(temp == Scenarios::C45) return 45;
+      else if(temp == Scenarios::C40) return 40;
+      else if(temp == Scenarios::Ambient) return 21; //house set to 70 degrees farenheit
+      ROS_ERROR_STREAM("Didn't recognize temperature!");
+      return 21;
+   }
+
+   cv::Scalar getColor(Scenarios::ObjectColor color)
+   {
+      if(color == Scenarios::Black) return cv::Scalar(0,0,0);
+      else if(color == Scenarios::RoseGold) return cv::Scalar(212,170,255);
+      else if(color == Scenarios::Blue) return cv::Scalar(204,165,51);
+      else if(color == Scenarios::Silver) return cv::Scalar(178,178,178);
+      else if(color == Scenarios::White) return cv::Scalar(255,255,255);
+      ROS_ERROR_STREAM("Don't recognize color: " << color);
+      return cv::Scalar(0,0,0);
+   }
 
    ObjectSize getSizeMeters(Scenarios::Size s)
    {
@@ -132,8 +177,14 @@ namespace Supportive
          size_m.width = 0.16;
          size_m.height = 0.16;
       }
-      else //otherwise, it's the hand warmer size for this experiment
+      else if(s == Scenarios::HANDWARMER) //otherwise, it's the hand warmer size for this experiment
       {
+         size_m.width = 0.057;
+         size_m.height = 0.108;         
+      }
+      else 
+      {
+         ROS_ERROR("Didn't recognize size!");
          size_m.width = 0.057;
          size_m.height = 0.108;
       }
