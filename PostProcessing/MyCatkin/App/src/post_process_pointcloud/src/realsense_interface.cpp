@@ -1,5 +1,6 @@
 #include "realsense_interface.h"
 #include <ros/console.h>
+#include <iostream>
 
 
 namespace PC
@@ -46,73 +47,91 @@ namespace PC
          exit(EXIT_FAILURE);
       }
 
-         //get depth from stream, return a vector of vectors of depth data. Each internal vector is a frame's worth of data
-      while (1)
+      try
       {
-         // This call waits until a new composite_frame is available
-         // composite_frame holds a set of frames. It is used to prevent frame drops
-         // The returned object should be released with rs2_release_frame(...)
-         rs2_frame* frames = rs2_pipeline_wait_for_frames(pipeline, RS2_DEFAULT_TIMEOUT, &e);
-         check_error(e);
-
-         // Returns the number of frames embedded within the composite frame
-         int num_of_frames = rs2_embedded_frames_count(frames, &e);
-         check_error(e);
-
-         int i;
-         for (i = 0; i < num_of_frames; ++i)
+         bool readWholeFile = false;
+         int frameCount = 0;
+         //get depth from stream, return a vector of vectors of depth data. Each internal vector is a frame's worth of data
+         while (!readWholeFile)
          {
-            //reducing to 10 hz, as lidar runs at 30hz and other light/temp/humidity sensors run at 10 hz
-            if( (i % 3) == 0)
+            // This call waits until a new composite_frame is available
+            // composite_frame holds a set of frames. It is used to prevent frame drops
+            // The returned object should be released with rs2_release_frame(...)
+            rs2_frame* frames = rs2_pipeline_wait_for_frames(pipeline, 15000, &e);
+            if(e)
             {
-               std::vector<float> frameVec;
-               int framePointCount = 0;
+               readWholeFile = true;
+               break;
+            }
+            check_error(e);
+            frameCount++;
 
-               // The returned object should be released with rs2_release_frame(...)
-               rs2_frame* frame = rs2_extract_frame(frames, i, &e);
-               check_error(e);
+            // Returns the number of frames embedded within the composite frame
+            int num_of_frames = rs2_embedded_frames_count(frames, &e);
+            check_error(e);
 
-               // Check if the given frame can be extended to depth frame interface
-               // Accept only depth frames and skip other frames
-               if (0 == rs2_is_frame_extendable_to(frame, RS2_EXTENSION_DEPTH_FRAME, &e))
-                  continue;
-
-               // Get the depth frame's dimensions
-               int width = rs2_get_frame_width(frame, &e);
-               check_error(e);
-               int height = rs2_get_frame_height(frame, &e);
-               check_error(e);
-
-               for(int row = upperLeft.x; row < lowerRight.x; row++)
+            int i;
+            for (i = 0; i < num_of_frames; ++i)
+            {
+               //reducing to 10 hz, as lidar runs at 30hz and other light/temp/humidity sensors run at 10 hz
+               if( (i % 3) == 0)
                {
-                  for(int column = upperLeft.y; column < lowerRight.y; column++)
+                  std::vector<float> frameVec;
+                  int framePointCount = 0;
+
+                  // The returned object should be released with rs2_release_frame(...)
+                  rs2_frame* frame = rs2_extract_frame(frames, i, &e);
+                  check_error(e);
+
+                  // Check if the given frame can be extended to depth frame interface
+                  // Accept only depth frames and skip other frames
+                  if (0 == rs2_is_frame_extendable_to(frame, RS2_EXTENSION_DEPTH_FRAME, &e))
+                     continue;
+
+                  // Get the depth frame's dimensions
+                  int width = rs2_get_frame_width(frame, &e);
+                  check_error(e);
+                  int height = rs2_get_frame_height(frame, &e);
+                  check_error(e);
+
+                  for(int row = upperLeft.x; row < lowerRight.x; row++)
                   {
-                     // Query the distance from the camera to the object in the center of the image
-                     float dist_to_point = rs2_depth_frame_get_distance(frame, row, column, &e);
-                     check_error(e);
-
-                     frameVec.push_back(dist_to_point);
-
-                     //add to frame's point count
-                     if( (dist_to_point > (expectedDistance_m - tolerance)) && (dist_to_point < (expectedDistance_m + tolerance)))
+                     for(int column = upperLeft.y; column < lowerRight.y; column++)
                      {
-                        framePointCount++;
-                        ROS_INFO_STREAM("Accepted distance: " << dist_to_point << " meters away at expected: " << expectedDistance_m);
-                     }
-                     else
-                     {
-                        ROS_INFO_STREAM("Rejected distance: " << dist_to_point << " meters away at expected: " << expectedDistance_m);
+                        // Query the distance from the camera to the object in the center of the image
+                        float dist_to_point = rs2_depth_frame_get_distance(frame, row, column, &e);
+                        //check_error(e);
+
+                        frameVec.push_back(dist_to_point);
+
+                        //add to frame's point count
+                        if( (dist_to_point > (expectedDistance_m - tolerance)) && (dist_to_point < (expectedDistance_m + tolerance)))
+                        {
+                           framePointCount++;
+                           //ROS_INFO_STREAM("Accepted distance: " << dist_to_point << " meters away at expected: " << expectedDistance_m);
+                        }
+                        else
+                        {
+                           //ROS_INFO_STREAM("Rejected distance: " << dist_to_point << " meters away at expected: " << expectedDistance_m);
+                        }
                      }
                   }
+                  ROS_INFO_STREAM("Frame point count: " << framePointCount << " with frame count: " << frameCount);
+                  rs2_release_frame(frame);
+                  framesOfDistancePoints.push_back(frameVec);
+                  numberOfPoints.push_back(framePointCount);
                }
-               rs2_release_frame(frame);
-               framesOfDistancePoints.push_back(frameVec);
-               numberOfPoints.push_back(framePointCount);
             }
+            rs2_release_frame(frames);
          }
-
-         rs2_release_frame(frames);
       }
+      catch(const std::exception& e)
+      {
+         std::cerr << e.what() << '\n';
+         ROS_INFO("Probably finished reading file, no worries");
+      } 
+
+      std::cout << "Exiting interface function";
 
       // Stop the pipeline streaming
       rs2_pipeline_stop(pipeline, &e);
@@ -132,7 +151,7 @@ namespace PC
       {
          printf("rs_error was raised when calling %s(%s):\n", rs2_get_failed_function(e), rs2_get_failed_args(e));
          printf("    %s\n", rs2_get_error_message(e));
-         exit(EXIT_FAILURE);
+         //exit(EXIT_FAILURE);
       }
    }   
 }

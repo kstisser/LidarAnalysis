@@ -2,6 +2,9 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <librealsense2/rs.hpp>
 #include "realsense_interface.h"
+#include <iostream>
+#include <fstream>
+#include <nlohmann/json.hpp>
 
 namespace PC
 {
@@ -30,8 +33,33 @@ namespace PC
       Supportive::ObjectExpectations expectations = Supportive::getSizeExpectation(this->_mScenario, SensorSpecs::getIntelLidar());
       std::vector<std::vector<float>> framesOfDistancePoints;
       std::vector<int> numberOfPoints;
-      float tolerance = expectations.maxDistanceBuffer - expectations.distanceValue_m;
+      float tolerance = 0.15; //6 inches
       RealsenseInterface::getDepthDistances(filename, lidarPoints.upperLeft, lidarPoints.lowerRight, framesOfDistancePoints, numberOfPoints, expectations.distanceValue_m, tolerance);
+
+      //write out data to a file
+      std::string jsonPath = filename.substr(0, filename.find_last_of("\\/")) + "/lidarPoints.json";
+
+      nlohmann::json jsonData;
+      nlohmann::json jArrayFramePoints;
+      for(int n : numberOfPoints)
+      {
+         jArrayFramePoints.push_back(n);
+      }
+      cv::Scalar color = Supportive::getColor(Scenarios::ObjectColor(scenario.color));
+      jsonData["objectColor"]["b"] = color[0];
+      jsonData["objectColor"]["g"] = color[1];
+      jsonData["objectColor"]["r"] = color[2];
+      jsonData["actualDistance"] = Supportive::getDistanceMeters(Scenarios::Distance(scenario.distance));
+      Supportive::ObjectSize osize = Supportive::getSizeMeters(Scenarios::Size(scenario.size));
+      jsonData["objectSize"]["height"] = osize.height;
+      jsonData["objectSize"]["width"] = osize.width;
+      jsonData["objectTemperature"] = Supportive::getTemperatureCelcius(Scenarios::ObjectTemperature(scenario.temperature));
+      jsonData["pointNumberByFrame"] = jArrayFramePoints;
+      //jsonData["framePoints"] = framesOfDistancePoints;
+
+      std::ofstream file("lidarPoints.json");
+      file << jsonData;
+      ROS_INFO_STREAM("Writing data to JSON at lidarPoints.json");
    }
 
    /**
@@ -59,6 +87,14 @@ namespace PC
       cv::Mat cameraImage_cv = ( cv_bridge::toCvCopy( cameraImage, cameraImage->encoding ) )->image;
       cv::Mat IRimage_cv = ( cv_bridge::toCvCopy( IRimage, IRimage->encoding ) )->image;
       cv::Mat depthImage_cv = ( cv_bridge::toCvCopy( depthImage, depthImage->encoding ) )->image;
+
+      /*cv::Vec3b color = cameraImage_cv.at<cv::Vec3b>(712,581);
+      ROS_INFO_STREAM("Rose gold color: (BGR) " << color[0] << ", " << color[1] << ", " << color[2]);
+      color = cameraImage_cv.at<cv::Vec3b>(638,576);
+      ROS_INFO_STREAM("Blue color: (BGR) " << color[0] << ", " << color[1] << ", " << color[2]);
+      color = cameraImage_cv.at<cv::Vec3b>(795,592);
+      ROS_INFO_STREAM("Silver color: (BGR) " << color[0] << ", " << color[1] << ", " << color[2]);
+      */
 
       //segment
       Supportive::ObjectExpectations expectations = Supportive::getSizeExpectation(this->_mScenario, SensorSpecs::getIntelLidar());
@@ -98,7 +134,7 @@ namespace PC
       ROS_INFO_STREAM("Max convolved camera: " << maxValue_camera);*/
       
       //publish images for debugging visualization
-      sensor_msgs::ImagePtr depthMsg = cv_bridge::CvImage( std_msgs::Header(), depthImage->encoding, histogram ).toImageMsg();
+      sensor_msgs::ImagePtr depthMsg = cv_bridge::CvImage( std_msgs::Header(), depthImage->encoding, depthImage_cv ).toImageMsg();
       depthMsg->header.stamp = ros::Time::now(); 
       this->_mLaplacianPub.publish(depthMsg); 
       
@@ -153,7 +189,6 @@ namespace PC
             }*/
          }
       }
-      ROS_ERROR_STREAM("0 count: " << zeroCount << ", bin1: " << bin1Count << ", bin2: " << bin2Count << ", bin3: " << bin3Count << ", bin4: " << bin4Count << ", extra: " << extraCount);
       pCountColorMsg.numberOfPixels = pixelsInDistanceRegion;
       ROS_WARN_STREAM("Found " << pixelsInDistanceRegion << " pixels in the region!");
 
@@ -203,10 +238,10 @@ int main( int argc, char * *argv )
    ros::NodeHandle handle;
    
    Scenarios::Scenario scenario;
-   scenario.size = Scenarios::Size::MM80;
+   scenario.size = Scenarios::Size::HANDWARMER;
    scenario.temperature = Scenarios::ObjectTemperature::Ambient;
-   scenario.color = Scenarios::ObjectColor::White;
-   scenario.distance = Scenarios::Distance::FT4;
+   scenario.color = Scenarios::ObjectColor::Blue;
+   scenario.distance = Scenarios::Distance::FT6;
 
    ROS_INFO_STREAM("Size: " << scenario.size);
    ROS_INFO_STREAM("Temperature: " << scenario.temperature);
@@ -214,26 +249,26 @@ int main( int argc, char * *argv )
    ROS_INFO_STREAM("Distance input: " << scenario.distance);
 
    Supportive::PixelPoints depthPoints;
-   depthPoints.upperLeft = cv::Point(398,288);
-   depthPoints.lowerRight = cv::Point(415,306);
+   depthPoints.upperLeft = cv::Point(385,249);
+   depthPoints.lowerRight = cv::Point(405,291);
 
    Supportive::PixelPoints cameraPoints;
    cameraPoints.upperLeft = cv::Point(647,420);
    cameraPoints.lowerRight = cv::Point(690,481);
 
-   std::string filename = "HandWarmers_2ft_45C.bag";
+   std::string filename = "lidar.bag";
 
    PC::PostProcessPointcloud pppNode(&handle, filename, scenario, depthPoints, cameraPoints);
 
-   message_filters::Subscriber<sensor_msgs::Image> cameraImage_sub( handle, Topics::CameraImageTopic, 10 );
-   message_filters::Subscriber<sensor_msgs::Image> IRimage_sub( handle, Topics::IRimageTopic, 10 );
-   message_filters::Subscriber<sensor_msgs::Image> pointCloud_sub( handle, Topics::PointCloud, 10 );
+   //message_filters::Subscriber<sensor_msgs::Image> cameraImage_sub( handle, Topics::CameraImageTopic, 10 );
+   //message_filters::Subscriber<sensor_msgs::Image> IRimage_sub( handle, Topics::IRimageTopic, 10 );
+   //message_filters::Subscriber<sensor_msgs::Image> pointCloud_sub( handle, Topics::PointCloud, 10 );
 
-   typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image, sensor_msgs::Image> imageSyncPolicy;
-   message_filters::Synchronizer<imageSyncPolicy> imageMessageSync( imageSyncPolicy( 10 ), cameraImage_sub, IRimage_sub, pointCloud_sub );
-   imageMessageSync.registerCallback( boost::bind( &PC::PostProcessPointcloud::callback, &pppNode, _1, _2, _3) );
+   //typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image, sensor_msgs::Image> imageSyncPolicy;
+   //message_filters::Synchronizer<imageSyncPolicy> imageMessageSync( imageSyncPolicy( 10 ), cameraImage_sub, IRimage_sub, pointCloud_sub );
+   //imageMessageSync.registerCallback( boost::bind( &PC::PostProcessPointcloud::callback, &pppNode, _1, _2, _3) );
 
-   ros::MultiThreadedSpinner spinner( 6 );
-   spinner.spin();
+   //ros::MultiThreadedSpinner spinner( 6 );
+   //spinner.spin();
    return 0;  //should never get here
 }
