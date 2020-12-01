@@ -48,8 +48,8 @@ if __name__ == '__main__':
     ax[1,1].legend(loc='upper right',shadow=True)
     plt.show()
     
-    #fig2, ax2 = plt.subplots(2,3)
     fig2 = plt.figure()
+    fig2.suptitle('Handwarmers # lidar point comparisons')
     expectedY_HW = [5142,5142,5142,5142,1289.7,1289.7,1289.7,1289.7,573,573,573,573]
     allDistances = [0.61, 0.61, 0.61, 0.61, 1.219, 1.219, 1.219, 1.219,1.829,1.829,1.829,1.829]
     allTemperatures = [21,40,45,50,21,40,45,50,21,40,45,50]
@@ -70,24 +70,53 @@ if __name__ == '__main__':
     silverTemperatures = [21,40,45,21,40,45,21,40,50]
     silver = [2724.44,2692.13,2756,788.9,1260.6,1181,637.03,517.3,407.2]    
     
-    ax2 = fig.add_subplot(2,3,(1),label='All Handwarmers')
+    ax2 = fig2.add_subplot(1,1,1,projection='3d',label='All Handwarmers')
+    ax2.set(xlabel='Distance (m)', ylabel = 'Number Lidar Points')
+    ax2.set_zlabel = 'Temperatures (C)'
     ax2.plot(blackDistances, black, blackTemperatures, color='black', label='Black')
     ax2.plot(blueDistances, blue, blueTemperatures, color='blue', label='Blue')
     ax2.plot(rgDistances, rg, rgTemperatures, color='red', label='RoseGold')
     ax2.plot(silverDistances, silver, silverTemperatures, color='gray', label='Silver')
-    ax2 = fig.add_subplot(2,3,(2),projection='3d',label='Black')
-    ax2.plot(blackDistances, black, blackTemperatures, color='black', label='Black')
-    ax2.plot(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
-    ax2 = fig.add_subplot(2,3,(3),projection='3d',label='Blue')
-    ax2.plot(blueDistances, blue, blueTemperatures, color='blue', label='Blue')
-    ax2.plot(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
-    ax2 = fig.add_subplot(2,3,(4),projection='3d',label='RoseGold')
-    ax2.plot(rgDistances, rg, rgTemperatures, color='red', label='RoseGold')
-    ax2.plot(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
-    ax2 = fig.add_subplot(2,3,(5),projection='3d',label='Silver')
-    ax2.plot(silverDistances, silver, silverTemperatures, color='gray', label='Silver')
-    ax2.plot(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
-    fig2.suptitle('Handwarmers # lidar point comparisons')
+    ax2.legend(loc='upper right',shadow=True)
+    plt.show()
+    fig3 = plt.figure()
+    fig3.suptitle('Black HW lidar points compared to expected')
+    ax3 = fig3.add_subplot(1,1,1,projection='3d',label='Black')
+    ax3.set(xlabel='Distance (m)', ylabel = 'Number Lidar Points')
+    ax3.set_zlabel = 'Temperatures (C)'
+    ax3.plot(blackDistances, black, blackTemperatures, color='black', label='Black')
+    ax3.plot(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
+    ax3.legend(loc='upper right',shadow=True)
+    plt.show()
+    fig4 = plt.figure()
+    fig4.suptitle('Blue HW lidar points compared to expected')
+    ax4 = fig4.add_subplot(1,1,1,projection='3d',label='Blue')
+    ax4.set(xlabel='Distance (m)', ylabel = 'Number Lidar Points')
+    ax4.set_zlabel = 'Temperatures (C)'    
+    ax4.plot(blueDistances, blue, blueTemperatures, color='blue', label='Blue')
+    ax4.plot(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
+    ax4.legend(loc='upper right',shadow=True)
+    plt.show()
+    fig5 = plt.figure()
+    fig5.suptitle('RoseGold HW lidar points compared to expected')
+    ax5 = fig5.add_subplot(1,1,1,projection='3d',label='RoseGold')
+    ax5.set(xlabel='Distance (m)', ylabel = 'Number Lidar Points')
+    ax5.set_zlabel = 'Temperatures (C)'
+    ax5.plot(rgDistances, rg, rgTemperatures, color='red', label='RoseGold')
+    ax5.plot(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
+    ax5.legend(loc='upper right',shadow=True)
+    plt.show()
+    fig6 = plt.figure()
+    fig6.suptitle('Silver HW lidar points compared to expected')
+    ax6 = fig6.add_subplot(1,1,1,projection='3d',label='Silver')
+    ax6.set(xlabel='Distance (m)', ylabel = 'Number Lidar Points')
+    ax6.set_zlabel = 'Temperatures (C)'
+    ax6.plot(silverDistances, silver, silverTemperatures, color='gray', label='Silver')
+    ax6.plot(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
+    ax6.legend(loc='upper right',shadow=True)
+    ax6.set_xlabel('Number of Lidar Points')
+    ax6.set_ylabel('Distance (m)')
+    
     '''ax2[0,0].set_ylabel('Number of Lidar Points')
     ax2[0,0].set_xlabel('Distance (m)')
     ax2[0,1].set_ylabel('Number of Lidar Points')

@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.interpolate as interpolate
+import plotter
 
 def traverseDirectoriesAndProcess(filepath):
     masterJSON = {}
@@ -138,6 +139,10 @@ def traverseDirectoriesAndProcess(filepath):
                 newJsonData["humidity"] = newHumid
                 newJsonData["light"] = newLight
                 newJsonData["numLidarPoints"] = pointNum
+                
+                plo = plotter.Plotter(newJsonData)
+                plo.plotAndSaveAllData(root, "Scatter", "numLidarPoints")
+                plo.plot1DPoints()
 
                 for i in range(maxLength):
                     masterJSON["area"].append(newJsonData["area"][i])
