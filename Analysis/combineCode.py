@@ -57,7 +57,7 @@ def traverseDirectoriesAndProcess(filepath):
                 #if minVal != 0:
                 #    maxLength = minVal
                 #else:
-                maxLength = max([tempSize,humidSize,lightSize,pointNumberSize])
+                maxLength = min([tempSize,humidSize,lightSize,pointNumberSize])
                 
                 newTemp = {}
                 newHumid = {}
@@ -99,14 +99,16 @@ def traverseDirectoriesAndProcess(filepath):
                     while(len(newPoints) < maxLength):
                         newPoints.append(0)        
 
-                #print("Max:")
-                #print(maxLength)
-                #print("temp size:")
-                #print(tempSize)
-                #print("humid size:")
-                #print(humidSize)
-                #print("light size:")
-                #print(lightSize)
+                print("Max:")
+                print(maxLength)
+                print("temp size:")
+                print(len(newTemp))
+                print("humid size:")
+                print(len(newHumid))
+                print("light size:")
+                print(len(newLight))
+                print("point num size:")
+                print(len(newPoints))
 
                 width = jsonData["objectSize"]["width"]
                 height = jsonData["objectSize"]["height"]
@@ -138,11 +140,15 @@ def traverseDirectoriesAndProcess(filepath):
                 newJsonData["temperature"] = newTemp
                 newJsonData["humidity"] = newHumid
                 newJsonData["light"] = newLight
-                newJsonData["numLidarPoints"] = pointNum
+                newJsonData["numLidarPoints"] = newPoints
                 
-                plo = plotter.Plotter(newJsonData)
-                plo.plotAndSaveAllData(root, "Scatter", "numLidarPoints")
-                plo.plot1DPoints()
+                try:
+                    plo = plotter.Plotter(newJsonData)
+                    plo.plotAndSaveAllData(root, "Scatter_NoZero", "numLidarPoints")
+                    plo.plot1DPoints()
+                    plo.plotHistograms(root)
+                except:
+                    print("Skipping plotting this one")
 
                 for i in range(maxLength):
                     masterJSON["area"].append(newJsonData["area"][i])
@@ -159,6 +165,11 @@ def traverseDirectoriesAndProcess(filepath):
 
                 #with open((os.path.join(root,'sameSizeAllData.json')), 'w') as fd:
                 #    json.dump(newJsonData, fd)
+                
+    plo2 = plotter.Plotter(masterJSON)
+    plo2.plotAndSaveAllData(filepath, "Scatter_NoZero", "numLidarPoints")
+    plo2.plot1DPoints()    
+    plo2.plotHistograms(filepath)
     return masterJSON
 
 def getDataFrame(dictionary):

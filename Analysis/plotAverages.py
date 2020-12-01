@@ -20,31 +20,31 @@ if __name__ == '__main__':
 
     mm160X = [0.61,1.829]
     mm160Y = [17205,2140]
-    ax[0,0].plot(mm160X,mm160Y,color='red',label='160mm')
+    ax[0,0].scatter(mm160X,mm160Y,color='red',label='160mm')
     mm80X = [0.61,1.219,1.829]
-    mm80Y = [5085,1338,475]
-    ax[0,0].plot(mm80X,mm80Y,color='purple',label='80mm')
+    mm80Y = [5085,1338,457]
+    ax[0,0].scatter(mm80X,mm80Y,color='purple',label='80mm')
     mm40X = [0.61,1.219]
     mm40Y = [1689,309]
-    ax[0,0].plot(mm40X,mm40Y,color='blue',label='40mm')    
+    ax[0,0].scatter(mm40X,mm40Y,color='blue',label='40mm')    
     ax[0,0].set_title('All Cubes')
     ax[0,0].legend(loc='upper right',shadow=True)
     
     expectedX = [0.61,1.219,1.829]
     expectedY_40 = [1961,491,218]
     ax[0,1].set_title('40mm')
-    ax[0,1].plot(mm40X,mm40Y,color='blue',label='40mm') 
-    ax[0,1].plot(expectedX,expectedY_40,color='green',label='Expected 40mm')
+    ax[0,1].scatter(mm40X,mm40Y,color='blue',label='40mm') 
+    ax[0,1].scatter(expectedX,expectedY_40,color='green',label='Expected 40mm')
     ax[0,1].legend(loc='upper right',shadow=True)
     expectedY_80 = [7845,1965,873]
     ax[1,0].set_title('80mm')
-    ax[1,0].plot(mm80X,mm80Y,color='purple',label='80mm')
-    ax[1,0].plot(expectedX,expectedY_80,color='green',label='Expected 80mm')
+    ax[1,0].scatter(mm80X,mm80Y,color='purple',label='80mm')
+    ax[1,0].scatter(expectedX,expectedY_80,color='green',label='Expected 80mm')
     ax[1,0].legend(loc='upper right',shadow=True)
     expectedY_160 = [31380,7858,3491]
     ax[1,1].set_title('160mm')
-    ax[1,1].plot(mm160X,mm160Y,color='red',label='160mm')
-    ax[1,1].plot(expectedX,expectedY_160,color='green',label='Expected 160mm')
+    ax[1,1].scatter(mm160X,mm160Y,color='red',label='160mm')
+    ax[1,1].scatter(expectedX,expectedY_160,color='green',label='Expected 160mm')
     ax[1,1].legend(loc='upper right',shadow=True)
     plt.show()
     
@@ -73,10 +73,10 @@ if __name__ == '__main__':
     ax2 = fig2.add_subplot(1,1,1,projection='3d',label='All Handwarmers')
     ax2.set(xlabel='Distance (m)', ylabel = 'Number Lidar Points')
     ax2.set_zlabel = 'Temperatures (C)'
-    ax2.plot(blackDistances, black, blackTemperatures, color='black', label='Black')
-    ax2.plot(blueDistances, blue, blueTemperatures, color='blue', label='Blue')
-    ax2.plot(rgDistances, rg, rgTemperatures, color='red', label='RoseGold')
-    ax2.plot(silverDistances, silver, silverTemperatures, color='gray', label='Silver')
+    ax2.scatter(blackDistances, black, blackTemperatures, color='black', label='Black')
+    ax2.scatter(blueDistances, blue, blueTemperatures, color='blue', label='Blue')
+    ax2.scatter(rgDistances, rg, rgTemperatures, color='red', label='RoseGold')
+    ax2.scatter(silverDistances, silver, silverTemperatures, color='gray', label='Silver')
     ax2.legend(loc='upper right',shadow=True)
     plt.show()
     fig3 = plt.figure()
@@ -84,8 +84,8 @@ if __name__ == '__main__':
     ax3 = fig3.add_subplot(1,1,1,projection='3d',label='Black')
     ax3.set(xlabel='Distance (m)', ylabel = 'Number Lidar Points')
     ax3.set_zlabel = 'Temperatures (C)'
-    ax3.plot(blackDistances, black, blackTemperatures, color='black', label='Black')
-    ax3.plot(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
+    ax3.scatter(blackDistances, black, blackTemperatures, color='black', label='Black')
+    ax3.scatter(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
     ax3.legend(loc='upper right',shadow=True)
     plt.show()
     fig4 = plt.figure()
@@ -93,8 +93,8 @@ if __name__ == '__main__':
     ax4 = fig4.add_subplot(1,1,1,projection='3d',label='Blue')
     ax4.set(xlabel='Distance (m)', ylabel = 'Number Lidar Points')
     ax4.set_zlabel = 'Temperatures (C)'    
-    ax4.plot(blueDistances, blue, blueTemperatures, color='blue', label='Blue')
-    ax4.plot(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
+    ax4.scatter(blueDistances, blue, blueTemperatures, color='blue', label='Blue')
+    ax4.scatter(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
     ax4.legend(loc='upper right',shadow=True)
     plt.show()
     fig5 = plt.figure()
@@ -102,8 +102,8 @@ if __name__ == '__main__':
     ax5 = fig5.add_subplot(1,1,1,projection='3d',label='RoseGold')
     ax5.set(xlabel='Distance (m)', ylabel = 'Number Lidar Points')
     ax5.set_zlabel = 'Temperatures (C)'
-    ax5.plot(rgDistances, rg, rgTemperatures, color='red', label='RoseGold')
-    ax5.plot(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
+    ax5.scatter(rgDistances, rg, rgTemperatures, color='red', label='RoseGold')
+    ax5.scatter(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
     ax5.legend(loc='upper right',shadow=True)
     plt.show()
     fig6 = plt.figure()
@@ -111,8 +111,8 @@ if __name__ == '__main__':
     ax6 = fig6.add_subplot(1,1,1,projection='3d',label='Silver')
     ax6.set(xlabel='Distance (m)', ylabel = 'Number Lidar Points')
     ax6.set_zlabel = 'Temperatures (C)'
-    ax6.plot(silverDistances, silver, silverTemperatures, color='gray', label='Silver')
-    ax6.plot(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
+    ax6.scatter(silverDistances, silver, silverTemperatures, color='gray', label='Silver')
+    ax6.scatter(allDistances, expectedY_HW, allTemperatures, color='green', label='Ground truth')
     ax6.legend(loc='upper right',shadow=True)
     ax6.set_xlabel('Number of Lidar Points')
     ax6.set_ylabel('Distance (m)')
