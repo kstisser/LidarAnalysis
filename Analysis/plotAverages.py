@@ -20,37 +20,37 @@ if __name__ == '__main__':
 
     mm160X = [0.61,1.829]
     mm160Y = [17205,2140]
-    ax[0,0].scatter(mm160X,mm160Y,color='red',label='160mm')
+    ax[0,0].plot(mm160X,mm160Y,color='red',label='160mm')
     mm80X = [0.61,1.219,1.829]
     mm80Y = [5085,1338,457]
-    ax[0,0].scatter(mm80X,mm80Y,color='purple',label='80mm')
+    ax[0,0].plot(mm80X,mm80Y,color='purple',label='80mm')
     mm40X = [0.61,1.219]
     mm40Y = [1689,309]
-    ax[0,0].scatter(mm40X,mm40Y,color='blue',label='40mm')    
+    ax[0,0].plot(mm40X,mm40Y,color='blue',label='40mm')    
     ax[0,0].set_title('All Cubes')
     ax[0,0].legend(loc='upper right',shadow=True)
     
     expectedX = [0.61,1.219,1.829]
-    expectedY_40 = [1961,491,218]
+    expectedY_40 = [2023.5, 505.9, 225]
     ax[0,1].set_title('40mm')
-    ax[0,1].scatter(mm40X,mm40Y,color='blue',label='40mm') 
-    ax[0,1].scatter(expectedX,expectedY_40,color='green',label='Expected 40mm')
+    ax[0,1].plot(mm40X,mm40Y,color='blue',label='40mm') 
+    ax[0,1].plot(expectedX,expectedY_40,color='green',label='Expected 40mm')
     ax[0,1].legend(loc='upper right',shadow=True)
-    expectedY_80 = [7845,1965,873]
+    expectedY_80 = [8094.2, 2023.5, 899.4]
     ax[1,0].set_title('80mm')
-    ax[1,0].scatter(mm80X,mm80Y,color='purple',label='80mm')
-    ax[1,0].scatter(expectedX,expectedY_80,color='green',label='Expected 80mm')
+    ax[1,0].plot(mm80X,mm80Y,color='purple',label='80mm')
+    ax[1,0].plot(expectedX,expectedY_80,color='green',label='Expected 80mm')
     ax[1,0].legend(loc='upper right',shadow=True)
-    expectedY_160 = [31380,7858,3491]
+    expectedY_160 = [32376.7, 8094.2, 3597.4]
     ax[1,1].set_title('160mm')
-    ax[1,1].scatter(mm160X,mm160Y,color='red',label='160mm')
-    ax[1,1].scatter(expectedX,expectedY_160,color='green',label='Expected 160mm')
+    ax[1,1].plot(mm160X,mm160Y,color='red',label='160mm')
+    ax[1,1].plot(expectedX,expectedY_160,color='green',label='Expected 160mm')
     ax[1,1].legend(loc='upper right',shadow=True)
     plt.show()
     
     fig2 = plt.figure()
     fig2.suptitle('Handwarmers # lidar point comparisons')
-    expectedY_HW = [5142,5142,5142,5142,1289.7,1289.7,1289.7,1289.7,573,573,573,573]
+    expectedY_HW = [7785.78, 7785.78, 7785.78, 7785.78,1946.4, 1946.4, 1946.4, 1946.4, 865, 865, 865, 865]
     allDistances = [0.61, 0.61, 0.61, 0.61, 1.219, 1.219, 1.219, 1.219,1.829,1.829,1.829,1.829]
     allTemperatures = [21,40,45,50,21,40,45,50,21,40,45,50]
     
@@ -77,6 +77,7 @@ if __name__ == '__main__':
     ax2.scatter(blueDistances, blue, blueTemperatures, color='blue', label='Blue')
     ax2.scatter(rgDistances, rg, rgTemperatures, color='red', label='RoseGold')
     ax2.scatter(silverDistances, silver, silverTemperatures, color='gray', label='Silver')
+    ax2.scatter(allDistances,expectedY_HW, allTemperatures, color='green', label='Expected')
     ax2.legend(loc='upper right',shadow=True)
     plt.show()
     fig3 = plt.figure()
